@@ -13,6 +13,7 @@ public class WorldEntity : MonoBehaviour {
 
 	void Start () {
         hitbox = GetComponent<Collider2D>();
+        if (!world) { world = GameObject.FindGameObjectWithTag("World").GetComponent<World>(); }
         world.Register(this);
 	}
 

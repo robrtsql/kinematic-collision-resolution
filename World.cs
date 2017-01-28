@@ -2,6 +2,28 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum ContactType
+{
+    None,
+    Above,
+    Below,
+    Left,
+    Right,
+    Inside
+}
+
+public struct Contact
+{
+    public WorldEntity entity;
+    public ContactType type;
+
+    public Contact(WorldEntity entity, ContactType type)
+    {
+        this.entity = entity;
+        this.type = type;
+    }
+}
+
 public class World : MonoBehaviour {
 
     private HashSet<WorldEntity> objects;
@@ -20,17 +42,31 @@ public class World : MonoBehaviour {
         objects.Remove(entity);
     }
 
-    public Vector3 Move(Collider2D mover, Vector3 destination)
+    /**
+     * Tries to move the given object to the given destination. Returns the location where
+     * it was allowed to move, and populates the collision list with all of the collisions
+     * it had.
+     */
+    public Vector3 Move(Collider2D mover, Vector3 destination, List<Contact> contacts)
     {
-        var enumerator = objects.GetEnumerator();
-
         var resolvedDestination = destination;
 
+        var enumerator = objects.GetEnumerator();
         while (enumerator.MoveNext())
         {
-            WorldEntity entity = enumerator.Current;
-            resolvedDestination = ResolveIntersectionIfAny(mover, resolvedDestination, entity);
+            resolvedDestination = ResolveIntersectionIfAny(mover, resolvedDestination, enumerator.Current);
         }
+
+        enumerator = objects.GetEnumerator();
+        while (enumerator.MoveNext())
+        {
+            var contact = FindContact(mover, resolvedDestination, enumerator.Current);
+            if (contact.type != ContactType.None && contact.entity != null)
+            {
+                contacts.Add(contact);
+            }
+        }
+
         return resolvedDestination;
     }
 
@@ -86,5 +122,40 @@ public class World : MonoBehaviour {
             }
         }
         return destination;
+    }
+
+    private Contact FindContact(Collider2D mover, Vector3 resolvedDestination, WorldEntity entity)
+    {
+        var moverBounds = new Bounds(resolvedDestination + new Vector3(mover.offset.x, mover.offset.y), mover.bounds.size);
+        var entityBounds = entity.hitbox.bounds;
+
+        bool isLeft = moverBounds.max.x <= entityBounds.min.x;
+        bool isRight = moverBounds.min.x >= entityBounds.max.x;
+        bool isAbove = moverBounds.min.y >= entityBounds.max.y;
+        bool isBelow = moverBounds.max.y <= entityBounds.min.y;
+        bool isIntersecting = !isLeft && !isRight && !isAbove && !isBelow;
+        if (isIntersecting)
+        {
+            return new Contact(entity, ContactType.Inside);
+        }
+
+        if (moverBounds.min.y == entityBounds.max.y && !isLeft && !isRight)
+        {
+            return new Contact(entity, ContactType.Above);
+        }
+        if (moverBounds.max.y == entityBounds.min.y && !isLeft && isRight)
+        {
+            return new Contact(entity, ContactType.Below);
+        }
+        if (moverBounds.max.x == entityBounds.min.x && !isAbove && !isBelow)
+        {
+            return new Contact(entity, ContactType.Left);
+        }
+        if (moverBounds.min.x == entityBounds.max.x && !isAbove && !isBelow)
+        {
+            return new Contact(entity, ContactType.Right);
+        }
+
+        return new Contact(null, ContactType.None);
     }
 }
