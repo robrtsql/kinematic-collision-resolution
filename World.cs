@@ -143,7 +143,7 @@ public class World : MonoBehaviour {
         {
             return new Contact(entity, ContactType.Above);
         }
-        if (moverBounds.max.y == entityBounds.min.y && !isLeft && isRight)
+        if (moverBounds.max.y == entityBounds.min.y && !isLeft && !isRight)
         {
             return new Contact(entity, ContactType.Below);
         }
