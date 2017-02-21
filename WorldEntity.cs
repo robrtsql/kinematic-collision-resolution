@@ -19,13 +19,20 @@ public class WorldEntity : MonoBehaviour {
 	[HideInInspector]
 	public Collider2D hitbox;
 
-	void Start () {
-		hitbox = GetComponent<Collider2D>();
+	private void RegisterWithWorld() {
 		if (!world) { world = GameObject.FindGameObjectWithTag("World").GetComponent<World>(); }
 		world.Register(this);
 	}
 
-	void OnDestroy()
+	void Start () {
+		hitbox = GetComponent<Collider2D>();
+	}
+
+	void OnEnable() {
+		RegisterWithWorld();
+	}
+
+	void OnDisable()
 	{
 		world.Deregesister(this);
 	}

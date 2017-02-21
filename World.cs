@@ -30,6 +30,10 @@ public class World : MonoBehaviour {
 	private HashSet<WorldEntity> triggers;
 
 	void Start () {
+	}
+
+	void OnEnable() {
+		Debug.Log("World enable");
 		obstacles = new HashSet<WorldEntity>();
 		triggers = new HashSet<WorldEntity>();
 	}
@@ -52,7 +56,20 @@ public class World : MonoBehaviour {
 
 	public void Deregesister(WorldEntity entity)
 	{
-		obstacles.Remove(entity);
+		switch (entity.type)
+		{
+			case EntityType.Obstacle:
+				obstacles.Remove(entity);
+				break;
+			case EntityType.Trigger:
+				triggers.Remove(entity);
+				break;
+			default:
+				Debug.LogError("Failed to register WorldEntity: unrecognized or uninitialized EntityType");
+				Debug.LogError("Fallback behavior: assume is 'trigger'");
+				triggers.Remove(entity);
+				break;
+		}
 	}
 
 	/**
