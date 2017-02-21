@@ -33,7 +33,6 @@ public class World : MonoBehaviour {
 	}
 
 	void OnEnable() {
-		Debug.Log("World enable");
 		obstacles = new HashSet<WorldEntity>();
 		triggers = new HashSet<WorldEntity>();
 	}
